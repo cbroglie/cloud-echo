@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-echo
+spec:
+  selector:
+    matchLabels:
+      app: cloud-echo
+  replicas: 2
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: cloud-echo
+    spec:
+      containers:
+      - image: us.gcr.io/cf-sec-eng/cloud-echo:2018.8.1
+        name: cloud-echo
+        env:
+        ports:
+        - containerPort: 8000
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-echo
+spec:
+  selector:
+    app: cloud-echo
+  type: NodePort
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: http
+    name: http
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cloud-echo
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "evida-cloud-ingress-ip"
+spec:
+  backend:
+    serviceName: cloud-echo
+    servicePort: 8000

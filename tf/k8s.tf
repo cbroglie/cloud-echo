@@ -60,6 +60,10 @@ resource "google_container_node_pool" "primary_pool" {
   }
 }
 
+resource "google_compute_global_address" "default" {
+  name = "evida-cloud-ingress-ip"
+}
+
 # The following outputs allow authentication and connectivity to the GKE Cluster.
 output "client_certificate" {
   value = "${google_container_cluster.primary.master_auth.0.client_certificate}"
