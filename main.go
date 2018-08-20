@@ -1,9 +1,9 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
 	"os"
+	"text/template"
 )
 
 var tmpl = template.Must(template.New("output").Parse(`{{ .banner }}
@@ -41,6 +41,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain")
 	})
 	http.ListenAndServe(":"+port, nil)
 }
