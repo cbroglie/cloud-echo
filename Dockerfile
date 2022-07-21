@@ -1,18 +1,16 @@
-FROM golang:1.10.3 AS builder
+# golang:1.18.4
+FROM golang@sha256:9349ed889adb906efa5ebc06485fe1b6a12fb265a01c9266a137bb1352565560 as builder
 
-ARG SRC_ROOT=/usr/local/go/src/github.com/cbroglie/cloud-echo
+WORKDIR /workspace
+COPY . ./
 
-COPY . $SRC_ROOT/
-WORKDIR $SRC_ROOT
+RUN make build
 
-RUN make && cp cloud-echo /cloud-echo
+# Use distroless as minimal base image to package the cloud-echo binary
+# Refer to https://github.com/GoogleContainerTools/distroless for more details
+FROM gcr.io/distroless/static:nonroot
+WORKDIR /
+COPY --from=builder /workspace/bin/cloud-echo /cloud-echo
+USER nonroot:nonroot
 
-FROM alpine:3.8
-
-RUN apk --no-cache add curl
-
-USER nobody
-
-COPY --from=builder /cloud-echo /cloud-echo
-
-ENTRYPOINT /cloud-echo
+ENTRYPOINT ["/cloud-echo"]

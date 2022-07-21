@@ -1,14 +1,25 @@
-.PHONY: all
-all: build
+.DEFAULT_GOAL := build
 
-.PHONY: build
-build:
-	CGO_ENABLED=0 go build -a -installsuffix cgo -o cloud-echo .
+export GOPRIVATE := code.cfops.it
 
-.PHONY: image
+.PHONY: build image push clean
+
+SOURCES       := $(shell find . -name '*.go')
+IMAGE         ?= registry.cfdata.org/u/$(USER)/cloud-echo
+VERSION       ?= $(shell git describe --tags --always --dirty)
+BUILD_FLAGS   ?= -v
+LDFLAGS       ?= -w -s
+
+build: bin/cloud-echo
+
+bin/cloud-echo: $(SOURCES)
+	CGO_ENABLED=0 go build -o $@ $(BUILD_FLAGS) -ldflags "$(LDFLAGS)"
+
+push: image
+	docker push "$(IMAGE):$(VERSION)"
+
 image:
-	docker build -t us.gcr.io/cf-sec-eng/cloud-echo:$(shell git describe --tags --dirty=-dev) .
+	docker build --rm --tag "$(IMAGE):$(VERSION)" .
 
-.PHONY: push
-push:
-	docker push us.gcr.io/cf-sec-eng/cloud-echo:$(shell git describe --tags --dirty=-dev)
+clean:
+	rm -rf bin
